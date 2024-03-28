@@ -2,7 +2,20 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>DTOql</Title>
+    <PackageProjectUrl>https://github.com/engmustafak26/DTOql</PackageProjectUrl>
+    <PackageIcon>ms-icon-310x310-1-1.png</PackageIcon>
+    <RepositoryUrl>https://github.com/engmustafak26/DTOql</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\Lenovo\Downloads\ms-icon-310x310-1-1.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8" />

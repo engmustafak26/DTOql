@@ -74,6 +74,31 @@ namespace DTOql.Models
 
             }
         }
+
+
+
+        public async Task ExecuteDtoSearchInterceptors()
+        {
+
+            var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
+            _cache.TryGetValue(context.RequestId, out var value);
+            Executers = value as Dictionary<Type, (object Executer, List<object> AppliedInstances)> ?? new();
+
+            var dtoLogicExecuters = Executers.Values.Where(x => x.Executer
+                                                                 .GetType()
+                                                                 .GetInterfaces()
+                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoSearchInterceptor<>)))
+                                                                 .ToArray();
+            foreach (var item in dtoLogicExecuters)
+            {
+                foreach (var modelItem in item.AppliedInstances)
+                {
+                    dynamic returnTask = item.Executer.GetType().GetMethod("ExecuteAsync").Invoke(item.Executer, new object[] { modelItem });
+                    await returnTask;
+                }
+
+            }
+        }
         public async Task ExecuteDtoLogicExecuters()
         {
 

@@ -102,6 +102,8 @@ namespace DTOql.DataAccess
                     resultSet = JsonConvert.DeserializeObject(stringSet, typeof(IEnumerable<>).MakeGenericType(inType)) as ICollection;
                 }
 
+                await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoSearchInterceptors();
+
                 searchModel.PaginationWithSort ??= new Models.PagingWithSortModel();
                 var searchString = searchModel.GetSearchCriteria();
                 var anonymous = ListModelType.GetAnonymousTypeAsString();
