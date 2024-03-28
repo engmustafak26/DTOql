@@ -1,4 +1,5 @@
-﻿using DTOql.Interfaces;
+﻿using DTOql.ASP;
+using DTOql.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,12 +65,27 @@ namespace DTOql.Models
                                                                  .GetInterfaces()
                                                                  .Any(y => y.GetGenericTypeDefinition() == typeof(ILogicDisplayer<>)))
                                                                  .ToArray();
+            var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
+
             foreach (var item in dtoLogicDisplayer)
             {
                 foreach (var modelItem in item.AppliedInstances)
                 {
-                    dynamic returnTask = item.Executer.GetType().GetMethod("ExecuteAsync").Invoke(item.Executer, new object[] { modelItem });
-                    await returnTask;
+                    using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
+                    {
+
+                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
+                        var paramtersInstances = parameters
+                                                 .Select(x => services.GetRequiredService(x.ParameterType))
+                                                 .ToArray();
+                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+
+                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
+                        await returnTask;
+
+                    }
+
+
                 }
 
             }
@@ -89,12 +105,28 @@ namespace DTOql.Models
                                                                  .GetInterfaces()
                                                                  .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoSearchInterceptor<>)))
                                                                  .ToArray();
+
+            var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
+
             foreach (var item in dtoLogicExecuters)
             {
                 foreach (var modelItem in item.AppliedInstances)
                 {
-                    dynamic returnTask = item.Executer.GetType().GetMethod("ExecuteAsync").Invoke(item.Executer, new object[] { modelItem });
-                    await returnTask;
+                    using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
+                    {
+
+                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
+                        var paramtersInstances = parameters
+                                                 .Select(x => services.GetRequiredService(x.ParameterType))
+                                                 .ToArray();
+                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+
+                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
+                        await returnTask;
+
+                    }
+
+
                 }
 
             }
@@ -111,12 +143,27 @@ namespace DTOql.Models
                                                                  .GetInterfaces()
                                                                  .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoLogicExecuter<>)))
                                                                  .ToArray();
+            var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
+
             foreach (var item in dtoLogicExecuters)
             {
                 foreach (var modelItem in item.AppliedInstances)
                 {
-                    dynamic returnTask = item.Executer.GetType().GetMethod("ExecuteAsync").Invoke(item.Executer, new object[] { modelItem });
-                    await returnTask;
+                    using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
+                    {
+
+                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
+                        var paramtersInstances = parameters
+                                                 .Select(x => services.GetRequiredService(x.ParameterType))
+                                                 .ToArray();
+                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+
+                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
+                        await returnTask;
+
+                    }
+
+
                 }
 
             }

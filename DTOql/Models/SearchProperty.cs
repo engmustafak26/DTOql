@@ -21,19 +21,19 @@ namespace DTOql.Models
 
         public virtual string GetLinqString(string fieldName)
         {
-            if (this.GetType().IsDate())
+            if (this.value.GetType().IsDate())
             {
                 type = "date";
             }
-            else if (this.GetType().IsNumeric())
+            else if (this.value.GetType().IsNumeric())
             {
                 type = "number";
             }
-            else if (this.GetType().IsString())
+            else if (this.value.GetType().IsString())
             {
                 type = "string";
             }
-            else if (this.GetType().IsBoolean())
+            else if (this.value.GetType().IsBoolean())
             {
                 type = "boolean";
             }
@@ -55,9 +55,13 @@ namespace DTOql.Models
 
             if (condition.IsEqual("<"))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} < {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} < \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -67,9 +71,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual(">"))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} > {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} > \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -79,10 +87,15 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("=") || condition.IsEqual("=="))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} = {value.ToString()}";
                 }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} = \"{value.ToString()}\"";
+                }
+
                 else if (type.IsEqual("date"))
                 {
                     var val = (DateTime)value;
@@ -106,9 +119,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("<=") || condition.IsEqual("=<"))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} <= {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} <= \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -118,9 +135,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("=>") || condition.IsEqual(">="))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} >= {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} >= \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -130,9 +151,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("!") || condition.IsEqual("!="))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number") )
                 {
                     returnString = $" {fieldName} != {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} != \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -142,9 +167,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("<>"))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} <> {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} <> \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
@@ -154,9 +183,13 @@ namespace DTOql.Models
             }
             else if (condition.IsEqual("<>"))
             {
-                if (type.IsEqual("number") || type.IsEqual("string"))
+                if (type.IsEqual("number"))
                 {
                     returnString = $" {fieldName} <> {value.ToString()}";
+                }
+                else if (type.IsEqual("string"))
+                {
+                    returnString = $" {fieldName} <> \"{value.ToString()}\"";
                 }
                 else if (type.IsEqual("date"))
                 {
