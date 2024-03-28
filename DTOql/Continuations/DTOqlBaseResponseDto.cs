@@ -20,7 +20,7 @@ namespace DTOql.Continuations
 
         Dictionary<string, List<string>> PropErrors { get; }
     }
-    public class BaseResponseDto<T> : IBaseResponseDto<T>
+    public class DTOqlBaseResponseDto<T> : IBaseResponseDto<T>
     {
         [JsonProperty]
         public bool IsSuccess { get; private set; }
@@ -40,9 +40,9 @@ namespace DTOql.Continuations
 
 
 
-        public static explicit operator BaseResponseDto<object>(BaseResponseDto<T> response)
+        public static explicit operator DTOqlBaseResponseDto<object>(DTOqlBaseResponseDto<T> response)
         {
-            return new BaseResponseDto<object>
+            return new DTOqlBaseResponseDto<object>
             {
                 Data = response.Data,
                 Errors = response.Errors,
@@ -54,7 +54,7 @@ namespace DTOql.Continuations
                 TransactionId = response.TransactionId
             };
         }
-        public BaseResponseDto()
+        public DTOqlBaseResponseDto()
         {
             SetSuccess(default, 0);
         }
@@ -69,23 +69,23 @@ namespace DTOql.Continuations
             PropErrors = default;
         }
 
-        public static BaseResponseDto<T> InternalSuccess(T data, PagingWithSortModel queryOptions = default, string message = default)
+        public static DTOqlBaseResponseDto<T> InternalSuccess(T data, PagingWithSortModel queryOptions = default, string message = default)
         {
-            var response = new BaseResponseDto<T>();
+            var response = new DTOqlBaseResponseDto<T>();
             response.SetSuccess(data, 0, queryOptions, message);
             return response;
         }
 
-        public static BaseResponseDto<T> Success(T data, PagingWithSortModel queryOptions = default, string message = default)
+        public static DTOqlBaseResponseDto<T> Success(T data, PagingWithSortModel queryOptions = default, string message = default)
         {
-            var response = new BaseResponseDto<T>();
+            var response = new DTOqlBaseResponseDto<T>();
             response.SetSuccess(data, 0, queryOptions, message);
             return response;
         }
 
-        public static BaseResponseDto<T> InternalError(string message, string transactionId = default, List<string> errors = null, Dictionary<string, List<string>> propErrors = null)
+        public static DTOqlBaseResponseDto<T> InternalError(string message, string transactionId = default, List<string> errors = null, Dictionary<string, List<string>> propErrors = null)
         {
-            var response = new BaseResponseDto<T>();
+            var response = new DTOqlBaseResponseDto<T>();
             response.SetError(message, 500);
             return response;
         }
@@ -102,21 +102,21 @@ namespace DTOql.Continuations
             Data = default;
         }
 
-        public BaseResponseDto<T> Error<TParameter>(BaseResponseDto<TParameter> fromErrorResponse)
+        public DTOqlBaseResponseDto<T> Error<TParameter>(DTOqlBaseResponseDto<TParameter> fromErrorResponse)
         {
             this.SetError(fromErrorResponse.Message, fromErrorResponse.ReturnCode, fromErrorResponse.TransactionId, fromErrorResponse.Errors, fromErrorResponse.PropErrors);
 
             return this;
         }
 
-        public BaseResponseDto<T> Error(string message, int returnCode)
+        public DTOqlBaseResponseDto<T> Error(string message, int returnCode)
         {
             this.SetError(message, returnCode, null, new List<string>() { message });
 
             return this;
         }
 
-        public BaseResponseDto<T> Success(T data, int returnCode)
+        public DTOqlBaseResponseDto<T> Success(T data, int returnCode)
         {
             this.SetSuccess(data, returnCode);
             return this;

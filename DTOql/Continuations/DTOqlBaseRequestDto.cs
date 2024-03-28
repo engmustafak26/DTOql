@@ -1,6 +1,6 @@
 ﻿namespace DTOql.Continuations
 {
-    public class BaseRequestDto<TRequest>
+    public class DTOqlBaseRequestDto<TRequest>
     {
         public TRequest data { get; set; }
     }

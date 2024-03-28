@@ -36,17 +36,17 @@ namespace DTOql.DataAccess
             _executers.AddRange(executers);
         }
 
-        public async Task<BaseResponseDto<IEnumerable<dynamic>>> GetAsync(Type ListModel, ISearch searchModel)
+        public async Task<DTOqlBaseResponseDto<IEnumerable<dynamic>>> GetAsync(Type ListModel, ISearch searchModel)
         {
-            return BaseResponseDto<IEnumerable<dynamic>>.Success(await _repository.GetAsync(ListModel, searchModel), searchModel.PaginationWithSort);
+            return DTOqlBaseResponseDto<IEnumerable<dynamic>>.Success(await _repository.GetAsync(ListModel, searchModel), searchModel.PaginationWithSort);
         }
-        public async Task<BaseResponseDto<dynamic?>> GetAsync(Type ListModel, long id)
+        public async Task<DTOqlBaseResponseDto<dynamic?>> GetAsync(Type ListModel, long id)
         {
-            return BaseResponseDto<dynamic?>.Success(await _repository.GetAsync(ListModel, id));
+            return DTOqlBaseResponseDto<dynamic?>.Success(await _repository.GetAsync(ListModel, id));
 
 
         }
-        public virtual async Task<BaseResponseDto<object>> AddAsync<T>(T dto) where T : class
+        public virtual async Task<DTOqlBaseResponseDto<object>> AddAsync<T>(T dto) where T : class
         {
 
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
@@ -65,7 +65,7 @@ namespace DTOql.DataAccess
             _repository.Add(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return BaseResponseDto<object>.Success(new { Id = entity.GetType().GetProperty("Id").GetValue(entity) });
+            return DTOqlBaseResponseDto<object>.Success(new { Id = entity.GetType().GetProperty("Id").GetValue(entity) });
         }
 
         private void NestedEntityHandle<T>(T dto, TEntity entity) where T : class
@@ -157,7 +157,7 @@ namespace DTOql.DataAccess
             return converter;
         }
 
-        public virtual async Task<BaseResponseDto<object>> EditAsync<T>(T dto) where T : class
+        public virtual async Task<DTOqlBaseResponseDto<object>> EditAsync<T>(T dto) where T : class
         {
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
             if (dtoLogic != null)
@@ -174,9 +174,9 @@ namespace DTOql.DataAccess
             _repository.Edit(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return BaseResponseDto<object>.Success(new());
+            return DTOqlBaseResponseDto<object>.Success(new());
         }
-        public virtual async Task<BaseResponseDto<object>> RemoveAsync(object id, bool restore = false)
+        public virtual async Task<DTOqlBaseResponseDto<object>> RemoveAsync(object id, bool restore = false)
         {
             var entity = Activator.CreateInstance<TEntity>();
             var idProperty = entity.GetType().GetProperty("Id");
@@ -188,9 +188,9 @@ namespace DTOql.DataAccess
             _repository.Remove(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            return BaseResponseDto<object>.Success(new());
+            return DTOqlBaseResponseDto<object>.Success(new());
         }
-        public async Task<BaseResponseDto<object>> SaveRangeAsync<T>(IEnumerable<T> dto) where T : class, IEntityState
+        public async Task<DTOqlBaseResponseDto<object>> SaveRangeAsync<T>(IEnumerable<T> dto) where T : class, IEntityState
 
         {
             await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
@@ -219,7 +219,7 @@ namespace DTOql.DataAccess
             }
 
             await _unitOfWork.SaveChangesAsync();
-            return BaseResponseDto<object>.Success(new());
+            return DTOqlBaseResponseDto<object>.Success(new());
         }
     }
 
