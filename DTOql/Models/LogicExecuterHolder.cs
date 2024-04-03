@@ -1,4 +1,5 @@
 ﻿using DTOql.ASP;
+using DTOql.Continuations;
 using DTOql.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
@@ -131,7 +132,7 @@ namespace DTOql.Models
 
             }
         }
-        public async Task ExecuteDtoLogicExecuters()
+        public async Task<DTOqlBaseResponseDto<object>> ExecuteDtoLogicExecuters()
         {
 
             var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
@@ -161,12 +162,19 @@ namespace DTOql.Models
                         dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
                         await returnTask;
 
+                        if (!returnTask.Result.IsSuccess)
+                        {
+                            return new DTOqlBaseResponseDto<object>().Error(returnTask.Result);
+                        }
+
                     }
 
 
                 }
 
             }
+
+            return DTOqlBaseResponseDto<object>.Success(new());
         }
 
     }

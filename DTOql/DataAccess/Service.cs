@@ -52,11 +52,18 @@ namespace DTOql.DataAccess
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
             if (dtoLogic != null)
             {
-                await dtoLogic.ExecuteAsync(dto);
+                DTOqlBaseResponseDto<object> responseResult = await dtoLogic.ExecuteAsync(dto);
+                if (!responseResult.IsSuccess)
+                {
+                    return new DTOqlBaseResponseDto<object>().Error(responseResult);
+                }
             }
 
-            await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
-
+            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
+            if (!executorResult.IsSuccess)
+            {
+                return new DTOqlBaseResponseDto<object>().Error(executorResult);
+            }
 
             var entity = dto.GetInstance<T, TEntity>();
 
@@ -162,11 +169,20 @@ namespace DTOql.DataAccess
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
             if (dtoLogic != null)
             {
-                await dtoLogic.ExecuteAsync(dto);
+
+                DTOqlBaseResponseDto<object> responseResult = await dtoLogic.ExecuteAsync(dto);
+                if (!responseResult.IsSuccess)
+                {
+                    return new DTOqlBaseResponseDto<object>().Error(responseResult);
+                }
+
             }
 
-            await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
-
+            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
+            if (!executorResult.IsSuccess)
+            {
+                return new DTOqlBaseResponseDto<object>().Error(executorResult);
+            }
 
             var entity = dto.GetInstance<T, TEntity>();
             NestedEntityHandle(dto, entity);

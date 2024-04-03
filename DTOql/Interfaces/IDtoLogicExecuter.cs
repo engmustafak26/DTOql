@@ -1,4 +1,5 @@
-﻿using DTOql.Enums;
+﻿using DTOql.Continuations;
+using DTOql.Enums;
 using System.Threading.Tasks;
 
 namespace DTOql.Interfaces
@@ -7,6 +8,6 @@ namespace DTOql.Interfaces
     {
         public EntityState[] ApplyWhenStates { get; }
 
-        Task ExecuteAsync(TDto dto);
+        Task<DTOqlBaseResponseDto<object>> ExecuteAsync(TDto dto);
     }
 }
