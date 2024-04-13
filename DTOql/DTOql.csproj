@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>DTOql</Title>
     <PackageProjectUrl>https://github.com/engmustafak26/DTOql</PackageProjectUrl>
@@ -12,14 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="C:\Users\Lenovo\Downloads\ms-icon-310x310-1-1.png">
+    <None Include="C:\Users\Lenovo\Downloads\images\ms-icon-310x310-1-1.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.7" />

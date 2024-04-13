@@ -24,14 +24,8 @@ namespace DTOql.Interfaces
             {
                 logicExecuterTypes.ForEach(x =>
                 {
-                    var parameters = x.GetConstructors().Single().GetParameters();
-                    var paramtersInstances = parameters
-                                             .Select(x => scope.ServiceProvider.GetRequiredService(x.ParameterType))
-                                             .ToArray();
-                    var executerInstance = Activator.CreateInstance(x, paramtersInstances);
-
                     var executerHolder = ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>();
-                    executerHolder.Add(x, executerInstance, this);
+                    executerHolder.Add(x);
                 });
             }
 

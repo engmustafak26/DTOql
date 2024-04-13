@@ -15,7 +15,7 @@ namespace DTOql.Models
 {
     internal class LogicExecuterHolder
     {
-        Dictionary<Type, (object Executer, List<object> AppliedInstances)> Executers { set; get; }
+        HashSet<Type> Executers { set; get; } = new HashSet<Type>();
         private readonly IMemoryCache _cache;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public LogicExecuterHolder(IMemoryCache cache, IHttpContextAccessor httpContextAccessor)
@@ -25,67 +25,36 @@ namespace DTOql.Models
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public void Add(Type type, object executer, object instance)
+        public void Add(Type type)
         {
 
-            var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
-            _cache.TryGetValue(context.RequestId, out var value);
-            if (value != null)
-            {
-                Executers = value as Dictionary<Type, (object Executer, List<object> AppliedInstances)>;
-            }
-            else
-            {
-                Executers = new();
-            }
-
-
-            Executers.TryGetValue(type, out var executerWithInstances);
-            if (executerWithInstances == default)
-            {
-                Executers.Add(type, (executer, new List<object>() { instance }));
-            }
-            else
-            {
-                executerWithInstances.AppliedInstances.Add(instance);
-            }
-
-
-            _cache.Set(context.RequestId, Executers, TimeSpan.FromSeconds(3000));
+            Executers.Add(type);
 
         }
-        public async Task ExecuteLogicDisplayers()
+        public async Task ExecuteLogicDisplayers(object dto)
         {
 
-            var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
-            _cache.TryGetValue(context.RequestId, out var value);
-            Executers = value as Dictionary<Type, (object Executer, List<object> AppliedInstances)> ?? new();
-
-            var dtoLogicDisplayer = Executers.Values.Where(x => x.Executer
-                                                                 .GetType()
-                                                                 .GetInterfaces()
-                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(ILogicDisplayer<>)))
-                                                                 .ToArray();
+            Type dtoType = dto.GetType();
+            var dtoLogicDisplayer = Executers.Where(x => x.GetInterfaces()
+                                                            .Any(y => y.GetGenericTypeDefinition() == typeof(ILogicDisplayer<>)
+                                                                      && y.GetGenericArguments().Contains(dtoType)))
+                                                            .ToArray();
             var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
 
             foreach (var item in dtoLogicDisplayer)
             {
-                foreach (var modelItem in item.AppliedInstances)
+
+                using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
                 {
-                    using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
-                    {
 
-                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
-                        var paramtersInstances = parameters
-                                                 .Select(x => services.GetRequiredService(x.ParameterType))
-                                                 .ToArray();
-                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+                    var parameters = item.GetConstructors().Single().GetParameters();
+                    var paramtersInstances = parameters
+                                             .Select(x => services.GetRequiredService(x.ParameterType))
+                                             .ToArray();
+                    var executerInstance = Activator.CreateInstance(item, paramtersInstances);
 
-                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
-                        await returnTask;
-
-                    }
-
+                    dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { dto });
+                    await returnTask;
 
                 }
 
@@ -94,72 +63,66 @@ namespace DTOql.Models
 
 
 
-        public async Task ExecuteDtoSearchInterceptors()
+        public async Task ExecuteDtoSearchInterceptors(object dto)
         {
-
+            Type dtoType = dto.GetType();
             var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
             _cache.TryGetValue(context.RequestId, out var value);
-            Executers = value as Dictionary<Type, (object Executer, List<object> AppliedInstances)> ?? new();
 
-            var dtoLogicExecuters = Executers.Values.Where(x => x.Executer
-                                                                 .GetType()
-                                                                 .GetInterfaces()
-                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoSearchInterceptor<>)))
+            var dtoLogicExecuters = Executers.Where(x => x.GetInterfaces()
+                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoSearchInterceptor<>)
+                                                                           && y.GetGenericArguments().Contains(dtoType)))
                                                                  .ToArray();
 
             var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
 
             foreach (var item in dtoLogicExecuters)
             {
-                foreach (var modelItem in item.AppliedInstances)
-                {
+              
                     using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
                     {
 
-                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
+                        var parameters = item.GetConstructors().Single().GetParameters();
                         var paramtersInstances = parameters
                                                  .Select(x => services.GetRequiredService(x.ParameterType))
                                                  .ToArray();
-                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+                        var executerInstance = Activator.CreateInstance(item, paramtersInstances);
 
-                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
+                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { dto });
                         await returnTask;
 
                     }
 
 
-                }
+                
 
             }
         }
-        public async Task<DTOqlBaseResponseDto<object>> ExecuteDtoLogicExecuters()
+        public async Task<DTOqlBaseResponseDto<object>> ExecuteDtoLogicExecuters(object dto)
         {
+            Type dtoType = dto.GetType();
 
             var context = _httpContextAccessor.HttpContext.RequestServices.GetRequiredService<AppExecutionContext>();
-            _cache.TryGetValue(context.RequestId, out var value);
-            Executers = value as Dictionary<Type, (object Executer, List<object> AppliedInstances)> ?? new();
+            
 
-            var dtoLogicExecuters = Executers.Values.Where(x => x.Executer
-                                                                 .GetType()
-                                                                 .GetInterfaces()
-                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoLogicExecuter<>)))
-                                                                 .ToArray();
+            var dtoLogicExecuters = Executers.Where(x => x.GetInterfaces()
+                                                                 .Any(y => y.GetGenericTypeDefinition() == typeof(IDtoLogicExecuter<>)
+                                                                           && y.GetGenericArguments().Contains(dtoType)))                                                                 .ToArray();
             var services = ServiceProviderWrapper.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext.RequestServices;
 
             foreach (var item in dtoLogicExecuters)
             {
-                foreach (var modelItem in item.AppliedInstances)
-                {
+               
                     using (var scope = ServiceProviderWrapper.ServiceProvider.CreateScope())
                     {
 
-                        var parameters = item.Executer.GetType().GetConstructors().Single().GetParameters();
+                        var parameters = item.GetConstructors().Single().GetParameters();
                         var paramtersInstances = parameters
                                                  .Select(x => services.GetRequiredService(x.ParameterType))
                                                  .ToArray();
-                        var executerInstance = Activator.CreateInstance(item.Executer.GetType(), paramtersInstances);
+                        var executerInstance = Activator.CreateInstance(item, paramtersInstances);
 
-                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { modelItem });
+                        dynamic returnTask = executerInstance.GetType().GetMethod("ExecuteAsync").Invoke(executerInstance, new object[] { dto });
                         await returnTask;
 
                         if (!returnTask.Result.IsSuccess)
@@ -170,7 +133,7 @@ namespace DTOql.Models
                     }
 
 
-                }
+                
 
             }
 

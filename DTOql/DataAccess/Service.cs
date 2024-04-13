@@ -59,7 +59,7 @@ namespace DTOql.DataAccess
                 }
             }
 
-            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
+            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(dto);
             if (!executorResult.IsSuccess)
             {
                 return new DTOqlBaseResponseDto<object>().Error(executorResult);
@@ -178,7 +178,7 @@ namespace DTOql.DataAccess
 
             }
 
-            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
+            DTOqlBaseResponseDto<object> executorResult = await ServiceProviderWrapper.ServiceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(dto);
             if (!executorResult.IsSuccess)
             {
                 return new DTOqlBaseResponseDto<object>().Error(executorResult);
@@ -209,7 +209,7 @@ namespace DTOql.DataAccess
         public async Task<DTOqlBaseResponseDto<object>> SaveRangeAsync<T>(IEnumerable<T> dto) where T : class, IEntityState
 
         {
-            await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters();
+            await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(dto);
 
             foreach (var item in dto)
             {
