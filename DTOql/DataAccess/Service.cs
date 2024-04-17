@@ -4,6 +4,7 @@ using DTOql.Enums;
 using DTOql.Extensions;
 using DTOql.Interfaces;
 using DTOql.Models;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
@@ -209,7 +210,14 @@ namespace DTOql.DataAccess
         public async Task<DTOqlBaseResponseDto<object>> SaveRangeAsync<T>(IEnumerable<T> dto) where T : class, IEntityState
 
         {
-            await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(dto);
+            foreach (var item in dto)
+            {
+                 DTOqlBaseResponseDto<object> executorResult = await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(item);
+                if (!executorResult.IsSuccess)
+                {
+                    return new DTOqlBaseResponseDto<object>().Error(executorResult);
+                }
+            } 
 
             foreach (var item in dto)
             {
