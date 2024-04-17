@@ -8,7 +8,7 @@
     <PackageIcon>ms-icon-310x310-1-1.png</PackageIcon>
     <RepositoryUrl>https://github.com/engmustafak26/DTOql</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <Version>2.3.3</Version>
+    <Version>2.3.4</Version>
   </PropertyGroup>
 
   <ItemGroup>
