@@ -122,24 +122,39 @@ namespace DTOql.DataAccess
                             repo.Add(itemCollection);
                             break;
                         case EntityState.Update:
-                            repo.Remove(itemCollection);
 
 
-                            string serializedObjString = JsonConvert.SerializeObject(itemCollection, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-                            var copyItem = JsonConvert.DeserializeObject(serializedObjString, property.PropertyType.GenericTypeArguments[0]) as dynamic;
-
-                            copyItem.GetType().GetProperty("Id").SetValue(copyItem, default(int));
-                            props = copyItem
+                            var props2 = itemCollection
                             .GetType()
                             .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                            foreach (var x in props)
+                            foreach (var x in props2)
                             {
                                 if (x.PropertyType == entity.GetType())
                                 {
-                                    x.SetValue(copyItem, entity);
+                                    x.SetValue(itemCollection, entity);
                                 }
                             }
-                            repo.Add(copyItem);
+
+
+                            repo.UpdateDeep(itemCollection);
+                            //repo.Remove(itemCollection);
+
+
+                            //string serializedObjString = JsonConvert.SerializeObject(itemCollection, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+                            //var copyItem = JsonConvert.DeserializeObject(serializedObjString, property.PropertyType.GenericTypeArguments[0]) as dynamic;
+
+                            //copyItem.GetType().GetProperty("Id").SetValue(copyItem, default(int));
+                            //props = copyItem
+                            //.GetType()
+                            //.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                            //foreach (var x in props)
+                            //{
+                            //    if (x.PropertyType == entity.GetType())
+                            //    {
+                            //        x.SetValue(copyItem, entity);
+                            //    }
+                            //}
+                            //repo.Add(copyItem);
                             // repo.Edit(itemCollection);
                             break;
                         case EntityState.Delete:
@@ -212,12 +227,12 @@ namespace DTOql.DataAccess
         {
             foreach (var item in dto)
             {
-                 DTOqlBaseResponseDto<object> executorResult = await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(item);
+                DTOqlBaseResponseDto<object> executorResult = await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(item);
                 if (!executorResult.IsSuccess)
                 {
                     return new DTOqlBaseResponseDto<object>().Error(executorResult);
                 }
-            } 
+            }
 
             foreach (var item in dto)
             {

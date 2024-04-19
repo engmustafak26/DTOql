@@ -75,6 +75,32 @@ namespace DTOql.DataAccess
             }
         }
 
+        public void UpdateDeep(TEntity entity)
+        {
+            foreach (var executer in _executers)
+            {
+                executer.ExecuteAsync(entity).GetAwaiter().GetResult();
+            }
+
+            var classValuedProperties = entity.GetType()
+                    .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                    .Where(x => x.PropertyType.IsClass && !x.PropertyType.IsNumeric() && !x.PropertyType.IsString() && !x.PropertyType.IsDate())
+                    .Where(x => x.GetValue(entity) != null)
+                    .ToArray();
+            if (classValuedProperties is { Length: 1 })
+            {
+                var entry = _databaseContext.Entry(entity);
+                entry.State = EntityState.Modified;
+            }
+            else
+            {
+
+                _entitiesSet.Add(entity);
+                var entities = _databaseContext.ChangeTracker.Entries().Where(x => x.State == EntityState.Added && x.IsKeySet).ToArray();
+                entities.ForEach(x =>  x.State = EntityState.Modified); 
+            }
+        }
+
         public void Edit(TEntity entity)
         {
             _entitiesSet.Update(entity);
