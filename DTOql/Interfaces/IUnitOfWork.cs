@@ -6,5 +6,6 @@ namespace DTOql.Interfaces
     {
         int SaveChanges();
         Task<int> SaveChangesAsync();
+        void ClearEntries();
     }
 }

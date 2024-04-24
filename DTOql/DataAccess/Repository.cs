@@ -70,8 +70,17 @@ namespace DTOql.DataAccess
             }
             else
             {
-
+                //var oldEntries = _databaseContext.ChangeTracker.Entries().Select(x => new { x.Entity, x.State }).ToList();
                 _entitiesSet.Add(entity);
+                //_databaseContext.ChangeTracker.Entries().ToList().ForEach(x =>
+                //{
+                //    var matchedEntry = oldEntries.FirstOrDefault(x => x.Entity == x.Entity);
+                //    if (matchedEntry is not null)
+                //    {
+                //        x.State = matchedEntry.State;
+                //    }
+
+                //});
             }
         }
 
@@ -87,18 +96,18 @@ namespace DTOql.DataAccess
                     .Where(x => x.PropertyType.IsClass && !x.PropertyType.IsNumeric() && !x.PropertyType.IsString() && !x.PropertyType.IsDate())
                     .Where(x => x.GetValue(entity) != null)
                     .ToArray();
-            if (classValuedProperties is { Length: 1 })
-            {
-                var entry = _databaseContext.Entry(entity);
-                entry.State = EntityState.Modified;
-            }
-            else
-            {
+            //if (classValuedProperties is { Length: 1 })
+            //{
+            var entry = _databaseContext.Entry(entity);
+            entry.State = EntityState.Modified;
+            //}
+            //else
+            //{
 
-                _entitiesSet.Add(entity);
-                var entities = _databaseContext.ChangeTracker.Entries().Where(x => x.State == EntityState.Added && x.IsKeySet).ToArray();
-                entities.ForEach(x =>  x.State = EntityState.Modified); 
-            }
+            //    _entitiesSet.Add(entity);
+            //    var entities = _databaseContext.ChangeTracker.Entries().Where(x => x.State == EntityState.Added && x.IsKeySet).ToArray();
+            //    entities.ForEach(x => x.State = EntityState.Modified);
+            //}
         }
 
         public void Edit(TEntity entity)
@@ -269,6 +278,11 @@ namespace DTOql.DataAccess
             }
         }
 
+        public void None(TEntity entity)
+        {
+            var entry = _databaseContext.Entry(entity);
+            entry.State = EntityState.Unchanged;
+        }
     }
 
 

@@ -21,44 +21,6 @@ namespace Demo.Infrastructure
         public static void SeedData()
         {
             var db = new DataContext();
-            db.Roles.AddRange(new Role[]
-          {
-                new Role
-                {
-                    Id=1,
-                    Name="Role1",
-                    IsDeleted=false,
-                },
-                new Role
-                {
-                    Id=2,
-                    Name="Role2",
-                    IsDeleted=true,
-                }
-          });
-
-            db.Users.AddRange(new User[]
-             {
-                new User
-                {
-                    Id=1,
-                    Name="user with no access",
-                    Email="fail@test.com",
-                    IsAdmin=false,
-                    IsDeleted=false,
-                    RoleId=null,
-                },
-                new User
-                {
-                    Id=2,
-                    Name="user with  access",
-                    Email="success@test.com",
-                    IsAdmin=false,
-                    IsDeleted=false,
-                    RoleId=1,
-                }
-             });
-
             db.SaveChanges();
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,5 +30,8 @@ namespace Demo.Infrastructure
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
+        public DbSet<Organization> Organizations { get; set; }
+        public DbSet<UserRoles> UserRoles { get; set; }
+        public DbSet<UserProfileHint>  Hints { get; set; }
     }
 }

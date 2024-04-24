@@ -14,9 +14,9 @@ namespace DTOql.Interfaces
 
         Task<IEnumerable<dynamic>> GetAsync(Type ListModel, ISearch searchModel);
         Task<dynamic?> GetAsync(Type ListModel, long id);
-        void Add(TEntity entity); 
+        void Add(TEntity entity);
         void Edit(TEntity entity);
         void Remove(TEntity entity);
-
+        void None(TEntity entity);
     }
 }

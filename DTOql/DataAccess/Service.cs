@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace DTOql.DataAccess
 {
@@ -22,7 +25,6 @@ namespace DTOql.DataAccess
 
         protected List<ILogicExecuter<TEntity>> _executers;
         public List<ILogicExecuter<TEntity>> Executers => _executers;
-
 
         public Service(IUnitOfWork unitOfWork, IRepository<TEntity> repository, IServiceProvider serviceProvider)
         {
@@ -49,7 +51,7 @@ namespace DTOql.DataAccess
         }
         public virtual async Task<DTOqlBaseResponseDto<object>> AddAsync<T>(T dto) where T : class
         {
-
+            _unitOfWork.ClearEntries();
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
             if (dtoLogic != null)
             {
@@ -76,30 +78,60 @@ namespace DTOql.DataAccess
             return DTOqlBaseResponseDto<object>.Success(new { Id = entity.GetType().GetProperty("Id").GetValue(entity) });
         }
 
-        private void NestedEntityHandle<T>(T dto, TEntity entity) where T : class
+        HashSet<object> _vistedObjects = new HashSet<object>();
+        private void NestedEntityHandle(object dto, object entity, Type parentObjectType = null)
         {
+
+
+            _vistedObjects.Add(entity);
             var ClassProperties = entity.GetType()
                                         .GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
-                                        .Where(x => x.PropertyType.IsGenericType &&
-                                                   (x.PropertyType.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))) &&
-                                                    x.GetValue(entity) != null)
+                                        .Where(x => !x.PropertyType.IsString() &&
+                                                      !x.PropertyType.IsNumeric() &&
+                                                      !x.PropertyType.IsBoolean() &&
+                                                      !x.PropertyType.IsDate() &&
+                                                       x.GetValue(entity) != null &&
+                                                       x.PropertyType != parentObjectType)
+                                        //.Where(x => x.PropertyType.IsGenericType &&
+                                        //           (x.PropertyType.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))) &&
+                                        //            x.GetValue(entity) != null)
                                         .ToArray();
-
 
             foreach (var property in ClassProperties)
             {
 
                 var collectionItems = property.GetValue(entity) as IEnumerable<dynamic>;
-                property.SetValue(entity, null);
+                if (collectionItems is null)
+                {
+                    collectionItems = new List<dynamic>() { property.GetValue(entity) };
+                }
 
-                var genericType = property.PropertyType.GenericTypeArguments[0];
+                bool loopDetected = false;
+                foreach (var item in collectionItems)
+                {
+                    if (_vistedObjects.Contains(item))
+                    {
+                        loopDetected = true;
+                        break;
+                    }
+                }
+                if (loopDetected)
+                    continue;
+
+                var genericType = property.PropertyType.GenericTypeArguments.Length == 0 ? property.PropertyType : property.PropertyType.GenericTypeArguments[0];
                 var repo = GetConverter(typeof(IRepository<>), genericType) as dynamic;
                 var executer = GetConverter(typeof(ILogicExecuter<>), genericType) as dynamic;
                 repo.SetLogicExecuters(executer);
 
                 var stateProperty = dto.GetType().GetProperty(property.Name);
-                var states = stateProperty.GetValue(dto) as IEnumerable<IEntityState>;
+                var states = stateProperty.GetValue(dto) as ICollection<IEntityState>;
 
+                if (states is null)
+                {
+                    var singleState = stateProperty.GetValue(dto) as IEntityState;
+                    states = new List<IEntityState>(collectionItems.Count());
+                    collectionItems.ForEach(x => states.Add(singleState ?? new _entityState { EntityState = EntityState.Add }));
+                }
 
                 int i = 0;
 
@@ -123,6 +155,7 @@ namespace DTOql.DataAccess
                             break;
                         case EntityState.Update:
 
+                            //property.SetValue(entity, null);
 
                             var props2 = itemCollection
                             .GetType()
@@ -160,6 +193,10 @@ namespace DTOql.DataAccess
                         case EntityState.Delete:
                             repo.Remove(itemCollection);
                             break;
+
+                        case EntityState.None:
+                            repo.None(itemCollection);
+                            break;
                         default:
                             break;
                     }
@@ -168,8 +205,49 @@ namespace DTOql.DataAccess
 
 
             }
-        }
 
+            ClassProperties.ForEach(x =>
+            {
+                var nested = x.GetValue(entity).GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                                          .Where(x => !x.PropertyType.IsString() &&
+                                                      !x.PropertyType.IsNumeric() &&
+                                                      !x.PropertyType.IsBoolean() &&
+                                                      !x.PropertyType.IsDate())
+                .ToArray();
+
+                nested.ForEach(y =>
+                {
+                    if (dto.GetType().GetProperty(x.Name) is null)
+                        return;
+
+                    IEnumerable enumerable = (x.GetValue(entity) as IEnumerable);
+                    var newDto = dto.GetType().GetProperty(x.Name).GetValue(dto);
+                    if (enumerable is null)
+                    {
+                        NestedEntityHandle(newDto, x.GetValue(entity), entity.GetType());
+                    }
+                    else
+                    {
+                        int count = 0;
+                        foreach (var item in enumerable)
+                        {
+                            var itemDto = (newDto as IEnumerable).ToDynamicArray().ElementAt(count++);
+                            NestedEntityHandle(itemDto, item, entity.GetType());
+
+
+                        }
+                    }
+                });
+
+                //x.SetValue(entity, null);
+
+            });
+
+        }
+        class _entityState : IEntityState
+        {
+            public EntityState EntityState { get; set; }
+        }
         private object GetConverter(Type baseType, Type inType)
 
         {
@@ -182,6 +260,7 @@ namespace DTOql.DataAccess
 
         public virtual async Task<DTOqlBaseResponseDto<object>> EditAsync<T>(T dto) where T : class
         {
+            _unitOfWork.ClearEntries();
             var dtoLogic = GetConverter(typeof(IDtoLogicExecuter<>), typeof(T)) as dynamic;
             if (dtoLogic != null)
             {
@@ -210,6 +289,7 @@ namespace DTOql.DataAccess
         }
         public virtual async Task<DTOqlBaseResponseDto<object>> RemoveAsync(object id, bool restore = false)
         {
+            _unitOfWork.ClearEntries();
             var entity = Activator.CreateInstance<TEntity>();
             var idProperty = entity.GetType().GetProperty("Id");
             idProperty.SetValue(entity, id);
@@ -225,6 +305,7 @@ namespace DTOql.DataAccess
         public async Task<DTOqlBaseResponseDto<object>> SaveRangeAsync<T>(IEnumerable<T> dto) where T : class, IEntityState
 
         {
+            _unitOfWork.ClearEntries();
             foreach (var item in dto)
             {
                 DTOqlBaseResponseDto<object> executorResult = await _serviceProvider.GetRequiredService<LogicExecuterHolder>().ExecuteDtoLogicExecuters(item);

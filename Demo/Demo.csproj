@@ -16,4 +16,8 @@
 	  <ProjectReference Include="..\DTOql\DTOql.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="DTO\Users\" />
+	</ItemGroup>
+
 </Project>

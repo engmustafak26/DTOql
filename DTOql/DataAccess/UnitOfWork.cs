@@ -1,9 +1,10 @@
 ﻿using DTOql.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace DTOql.DataAccess
-{ 
+{
     public class DbUnitOfWork : IUnitOfWork
     {
         #region Properties
@@ -31,6 +32,11 @@ namespace DTOql.DataAccess
         public Task<int> SaveChangesAsync()
         {
             return DatabaseContext.SaveChangesAsync();
+        }
+
+        public void ClearEntries()
+        {
+            DatabaseContext.ChangeTracker.Clear();
         }
 
         #endregion Execute
