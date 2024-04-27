@@ -23,7 +23,7 @@ namespace DTOql.Extensions
 
         public static bool IsNumeric(this Type myType)
         {
-            return NumericTypes.Contains(Nullable.GetUnderlyingType(myType) ?? myType);
+            return NumericTypes.Contains(Nullable.GetUnderlyingType(myType) ?? myType) || myType.IsEnum;
         }
         public static bool IsString(this Type myType)
         {
