@@ -31,7 +31,8 @@ namespace DTOql.Extensions
         }
         public static bool IsDate(this Type myType)
         {
-            return (Nullable.GetUnderlyingType(myType) ?? myType) == typeof(DateTime);
+            return (Nullable.GetUnderlyingType(myType) ?? myType) == typeof(DateTime)
+                    || (Nullable.GetUnderlyingType(myType) ?? myType) == typeof(TimeSpan);
         }
         public static bool IsBoolean(this Type myType)
         {
